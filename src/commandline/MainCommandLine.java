@@ -6,6 +6,12 @@ public class MainCommandLine {
 		Morpion morpy = new Morpion();
 		
 		morpy.startGame();
+		
+		
+		while (morpy.partieFinie() == false) {
+			morpy.tour();
+		}
+		
 	}
 
 }

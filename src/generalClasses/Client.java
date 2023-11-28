@@ -26,6 +26,7 @@ public class Client {
 			this.out = new PrintWriter(client.getOutputStream(), true);
 			System.out.println("Morpy/:$ Connexion réussie !");
 		} catch (Exception e) {
+			System.out.println(e.toString());
 			System.out.println("Morpy/:$ Erreur : Echec de la connexion !!!");
 			System.exit(0);
 		}

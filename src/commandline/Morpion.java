@@ -1,8 +1,7 @@
 package commandline;
 
-import java.nio.file.spi.FileSystemProvider;
+import java.util.Arrays;
 import java.util.Scanner;
-
 import generalClasses.Client;
 import generalClasses.Server;
 import test.AlgoCLTest;
@@ -12,6 +11,7 @@ public class Morpion {
 	public char[][] grille = new char[3][3]; 				// plateau de jeu
 	public boolean connexionMode ; 							// true si serveur ou false si client
 	public char symbol ; 									// Symbole par lequel le joueur remplit le tableau
+	public Boolean premierCoup = true ;
 	Client client ;
 	Server server ;
 
@@ -26,6 +26,10 @@ public class Morpion {
 		}
 	}
 	
+	/*
+	 * Problème split[2] est nul au second coup. Peut être la récupération du tableau. Mauvais formatage
+	 */
+	
 
 	
 	/*
@@ -34,9 +38,8 @@ public class Morpion {
 	 * ================================================================================================================================================================
 	 */
 	
-	// ========================== Initialisation du jeu ==========================
-	
-	public void startGame() {
+		
+	public void startGame() { // Initialisation du jeu
 		System.out.println("Bienvenue \n");
 		
 		// Choix du mode de connexion pour chaque joueur
@@ -45,8 +48,7 @@ public class Morpion {
 				Morpy/:$ --- Choisissez votre mode de connexion (un serveur et un client par partie):
 								1 -> Client
 								2 -> Serveur
-				Morpy/:$
-				""");
+				Morpy/:$ """);
 		int nombre = scan.nextInt();
 		
 		// Attribution des modes de connexion et des symboles 
@@ -62,19 +64,20 @@ public class Morpion {
 		if (this.connexionMode == true) {
 			this.server = new Server();
 			System.out.println("""
-					Morpy/:$ --- Vous avez choisit une connexion serveur :
-							 --- Communiquez l'adresse ci-dessous à votre partenaire pour qu'il se connecte
-						     --- Adresse : """ + this.server.ipAdress);
+					Morpy/:$ --- | Vous avez choisit une connexion serveur :
+						     | Communiquez l'adresse ci-dessous à votre partenaire pour qu'il se connecte
+						     | Adresse : """ + this.server.ipAdress);
 			this.server.connectToClient();
 			
 		} else {
 			this.client = new Client() ;
+			scan.nextLine(); // Pour récupérer le "\n" restant de l'entrée int précédente
 			System.out.print("""
-					Morpy/:$ --- Vous avez choisit une connexion client.
-						     --- Entrez l'adresse comuniquée par votre adversaire ---
+					Morpy/:$ --- | Vous avez choisit une connexion client.
+					         | Entrez l'adresse comuniquée par votre adversaire ---
 					Morpy/:$ """);
-			scan.next(); // Pour récupérer le "\n" restant de l'entrée int précédente
 			String entree = scan.nextLine();
+			System.out.println("Entrée : " + entree);
 			this.client.serverAdress = entree ;
 			this.client.connectToServer();
 		}
@@ -85,10 +88,10 @@ public class Morpion {
 	public void envoyer() { // Envoi du tableau à l'autre joueur
 		if (this.connexionMode == true) {
 			// Cas du serveur
-			this.server.sendToClient(this.grille.toString());
+			this.server.sendToClient(Arrays.asList(this.grille).toString());
 		} else {
 			// Cas du client
-			this.client.sendToServer(this.grille.toString());
+			this.client.sendToServer(Arrays.asList(this.grille).toString());
 		}
 	}
 	
@@ -114,6 +117,7 @@ public class Morpion {
 		}
 		// Mise à jour du plateau
 		this.grille = retour ;
+		
 	}
 	
 	
@@ -125,10 +129,18 @@ public class Morpion {
 	
 	public void tour() {
 		
-		// Vérification si le coup joué par l'adversaire n'est pas gagnant
-		if (this.partieFinie() == true) {
-			System.out.println("Morpy/:$ --- Votre adversaire a gagné !");
-		}
+		// Le serveur joue le premier coup pour lancer la partie sans récupérer le tableau
+		if (this.premierCoup != true || this.connexionMode != true) {
+			this.premierCoup = false ;
+			
+			// Réception du coup joué
+			this.recevoir();
+			
+			// Vérification si le coup joué par l'adversaire n'est pas gagnant
+			if (this.partieFinie() == true) {
+				System.out.println("Morpy/:$ --- Votre adversaire a gagné !");
+			}
+		}		
 		
 		// Séparation grahique de l'ancien coup
 		System.out.println("""
@@ -153,6 +165,9 @@ public class Morpion {
 			System.out.println("Morpy/:$ --- Vous avez gagné !");
 			System.exit(0);
 		} 
+		
+		// Envoi du coup joué
+		this.envoyer();
 	}
 	
 	

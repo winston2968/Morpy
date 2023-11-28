@@ -5,9 +5,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Enumeration;
 
 public class Server {
 	
@@ -19,12 +22,30 @@ public class Server {
 	
 	
 	public Server() {
+		
 		try {
-			this.ipAdress = Inet4Address.getLocalHost().getHostAddress();
-		} catch (UnknownHostException e) {
-			System.out.println("Impossible de récupérer l'adresse ip de la machine !");
-			System.exit(0);
+			// Récupération de l'adresse ip de la machine serveur
+			Enumeration<NetworkInterface> e = NetworkInterface.getNetworkInterfaces();	
+			while(e.hasMoreElements()) {
+				// Récupère une énumération de toutes les interfaces réseau
+			    NetworkInterface n = (NetworkInterface) e.nextElement();
+			    Enumeration<InetAddress> ee = n.getInetAddresses();
+			    while (ee.hasMoreElements()) {
+			    	// Récupère l'adresse ip de chaque interface
+			        InetAddress i = (InetAddress) ee.nextElement();
+			        String current = i.getHostAddress();
+			        // Choisit celle que l'on veut
+			        String[] decoupage = current.split("\\.");
+			        if (decoupage.length == 4 && current.equals("127.0.0.1") == false) {
+			        	this.ipAdress = current ;	        	
+			        }
+			        
+			    }
+			}
+		} catch (Exception e) {
+			System.out.println("Morpy/:$ --- /!\\ Impossible de récupérer l'adresse ip de la machine /!\\");
 		}
+		
 		
 	}
 	
