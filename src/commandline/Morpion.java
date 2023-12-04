@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Scanner;
 import generalClasses.Client;
 import generalClasses.Server;
-import test.AlgoCLTest;
 
 public class Morpion {
 	
@@ -86,7 +85,7 @@ public class Morpion {
 	
 	
 	public void envoyer() { // Envoi du tableau à l'autre joueur
-		if (this.connexionMode == true) {
+		if (this.connexionMode) {
 			// Cas du serveur
 			this.server.sendToClient(Arrays.asList(this.grille).toString());
 		} else {
@@ -98,12 +97,13 @@ public class Morpion {
 	
 	public void recevoir() {
 		String[] split1 ;
-		if (this.connexionMode == true) {
+		if (this.connexionMode) {
 			// Cas du serveur
 			split1 = this.server.readFromClient().split("\n");			
 		} else {
 			split1 = this.client.readFromServer().split("\n");
 		}
+		System.out.println("Message reçu : " + Arrays.asList(split1).toString());
 		// Formatage du retour pour avoir un tableau de caractères
 		String[][] split2 = new String[3][];
 		for (int i = 0; i < split1.length ;i++) {
@@ -130,14 +130,14 @@ public class Morpion {
 	public void tour() {
 		
 		// Le serveur joue le premier coup pour lancer la partie sans récupérer le tableau
-		if (this.premierCoup != true || this.connexionMode != true) {
+		if (!this.premierCoup || !this.connexionMode) {
 			this.premierCoup = false ;
 			
 			// Réception du coup joué
 			this.recevoir();
 			
 			// Vérification si le coup joué par l'adversaire n'est pas gagnant
-			if (this.partieFinie() == true) {
+			if (this.partieFinie()) {
 				System.out.println("Morpy/:$ --- Votre adversaire a gagné !");
 			}
 		}		
@@ -152,7 +152,7 @@ public class Morpion {
 		// Récupération des coordonnées
 		int[] coord = this.getCoordonnees();
 
-		while (this.case_vide(coord[0] - 1, coord[1] - 1) == false) {
+		while (!this.case_vide(coord[0] - 1, coord[1] - 1)) {
 			System.out.println("Morpy/:$ --- /!\\ La case saisie n'est pas libre ! /!\\");
 			coord = this.getCoordonnees();
 		}
@@ -161,7 +161,7 @@ public class Morpion {
 		this.grille[coord[0] - 1][coord[1] - 1] = this.symbol ;
 		
 		// Vérification que le coup entré n'est pas gagnant
-		if (this.partieFinie() == true) {
+		if (this.partieFinie()) {
 			System.out.println("Morpy/:$ --- Vous avez gagné !");
 			System.exit(0);
 		} 
@@ -228,11 +228,11 @@ public class Morpion {
 	}
 	
 	public boolean partieFinie() { // Test si une partie est finie
-		if (this.tableau_plein() == true && this.gagne() == false) {
+		if (this.tableau_plein() && !this.gagne()) {
 			System.out.println("Morpy/:$ --- PARTIE FINIE --- ");
 			System.out.println("Morpy/:$ --- Aucun des deux joueurs n'a gagné !");
 			System.exit(0);
-		} else if (this.gagne() == true) {
+		} else if (this.gagne()) {
 			System.out.println("Morpy/:$ --- Partie Finie --- ");
 			return true ;
 		} 

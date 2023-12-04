@@ -8,7 +8,7 @@ public class MainCommandLine {
 		morpy.startGame();
 		
 		
-		while (morpy.partieFinie() == false) {
+		while (!morpy.partieFinie()) {
 			morpy.tour();
 		}
 		
