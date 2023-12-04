@@ -1,0 +1,8 @@
+=========================================================================================================						Notes - Morpy
+=========================================================================================================
+
+
+
+### Choses à ajouter :
+	- vérification de la validité de la grille reçue pour éviter d'envoyer une grille gagnante à tous les coups
+	- vérifier les données entrées par le joueur à chaque fois

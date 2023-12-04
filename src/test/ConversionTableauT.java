@@ -22,6 +22,9 @@ public class ConversionTableauT {
 		char[][] tableau2 = convertToPrint(message);
 		System.out.println("Conversion...");
 		System.out.println(afficheTableau(tableau2));
+		tableau2[1][1] = 'O';
+		System.out.println(afficheTableau(tableau2));
+		
 		
 		
 		

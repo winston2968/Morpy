@@ -1,6 +1,6 @@
 package commandline;
 
-import java.util.Arrays;
+
 import java.util.Scanner;
 import generalClasses.Client;
 import generalClasses.Server;
@@ -24,10 +24,6 @@ public class Morpion {
 			}
 		}
 	}
-	
-	/*
-	 * Problème split[2] est nul au second coup. Peut être la récupération du tableau. Mauvais formatage
-	 */
 	
 
 	
@@ -85,38 +81,60 @@ public class Morpion {
 	
 	
 	public void envoyer() { // Envoi du tableau à l'autre joueur
+		
+		// Formatage du tableau
+		String envoi = "" ;
+		char[][] tableau = this.grille ;
+		for (int i = 0 ; i < tableau.length ; i++) {
+			for (int j = 0 ; j < tableau.length ; j++) {
+				if (j == tableau[i].length - 1) {
+					envoi += tableau[i][j];
+				} else {
+					envoi += tableau[i][j] + "," ;
+				}
+			}
+			if (i != tableau.length - 1) {
+				envoi += "-";
+			}
+		}
+		
+		// Envoi du tableau
 		if (this.connexionMode) {
 			// Cas du serveur
-			this.server.sendToClient(Arrays.asList(this.grille).toString());
+			this.server.sendToClient(envoi);
 		} else {
 			// Cas du client
-			this.client.sendToServer(Arrays.asList(this.grille).toString());
+			this.client.sendToServer(envoi);
 		}
 	}
 	
 	
 	public void recevoir() {
-		String[] split1 ;
+		
+		// Réception du message
+		String message ;
 		if (this.connexionMode) {
 			// Cas du serveur
-			split1 = this.server.readFromClient().split("\n");			
+			message = this.server.readFromClient();		
 		} else {
-			split1 = this.client.readFromServer().split("\n");
+			message = this.client.readFromServer();
 		}
-		System.out.println("Message reçu : " + Arrays.asList(split1).toString());
-		// Formatage du retour pour avoir un tableau de caractères
-		String[][] split2 = new String[3][];
-		for (int i = 0; i < split1.length ;i++) {
-			split2[i] = split1[i].split(" ");
+		
+		// Traitement
+		char[][] tableau = new char[3][3];
+		String[] split1 = message.split("-");
+		String[][] split2 = new String[3][3];
+		for (int i = 0 ; i < split1.length ; i++) {
+			split2[i] = split1[i].split(",");
 		}
-		char[][] retour = new char[3][3];
 		for (int i = 0 ; i < split2.length ; i++) {
 			for (int j = 0 ; j < split2[i].length ; j++) {
-				retour[i][j] = split2[i][j].charAt(0);
+				tableau[i][j] = split2[i][j].charAt(0);
 			}
 		}
-		// Mise à jour du plateau
-		this.grille = retour ;
+		
+		// Mise à jour de la grille
+		this.grille = tableau ;
 		
 	}
 	
@@ -130,17 +148,21 @@ public class Morpion {
 	public void tour() {
 		
 		// Le serveur joue le premier coup pour lancer la partie sans récupérer le tableau
-		if (!this.premierCoup || !this.connexionMode) {
+		if (this.premierCoup && this.connexionMode) {
 			this.premierCoup = false ;
+			System.out.println("Morpy/:$ --- Le serveur commence à jouer...");
 			
+		} else {
 			// Réception du coup joué
 			this.recevoir();
 			
 			// Vérification si le coup joué par l'adversaire n'est pas gagnant
 			if (this.partieFinie()) {
 				System.out.println("Morpy/:$ --- Votre adversaire a gagné !");
+				System.exit(0);
 			}
-		}		
+		}
+				
 		
 		// Séparation grahique de l'ancien coup
 		System.out.println("""
@@ -163,6 +185,7 @@ public class Morpion {
 		// Vérification que le coup entré n'est pas gagnant
 		if (this.partieFinie()) {
 			System.out.println("Morpy/:$ --- Vous avez gagné !");
+			this.envoyer();
 			System.exit(0);
 		} 
 		
@@ -220,12 +243,15 @@ public class Morpion {
 		return false;
 	}
 	
-	public boolean ligne_vide(int i) { // Vérifie si une ligne est vide (utile plus tard)
-		if (this.case_vide(i, 0) && this.case_vide(i, 1) && this.case_vide(i, 2)) {
+	
+	public boolean ligne_pleine(int i) {
+		if ((!this.case_vide(i, 0)) && (!this.case_vide(i, 1)) && (!this.case_vide(i, 2))) {
 			return true;
 		}
 		return false;
+
 	}
+
 	
 	public boolean partieFinie() { // Test si une partie est finie
 		if (this.tableau_plein() && !this.gagne()) {
@@ -233,33 +259,45 @@ public class Morpion {
 			System.out.println("Morpy/:$ --- Aucun des deux joueurs n'a gagné !");
 			System.exit(0);
 		} else if (this.gagne()) {
-			System.out.println("Morpy/:$ --- Partie Finie --- ");
+			System.out.println("Morpy/:$ --- PARTIE FINIE --- ");
 			return true ;
 		} 
 		return false ;
 	}
 	
-	public boolean tableau_plein() { // Test si le plateau est plein
-		if (!this.ligne_vide(0) && !this.ligne_vide(1) && !this.ligne_vide(2)) {
+	public boolean tableau_plein() {
+		if ((this.ligne_pleine(0)) && (this.ligne_pleine(1)) && (this.ligne_pleine(2))) {
 			return true;
 		}
 		return false;
 	}
 	
-	public boolean gagne() { // Test si une partie est gagnée (sous cas d'une partie finie)
+	public boolean gagne() {
 		for (int i = 0; i < this.grille.length; i = i + 1) {
 			if ((this.grille[i][0] == this.grille[i][1] && this.grille[i][1] == this.grille[i][2])
 					&& this.grille[i][0] != '.') {
+				// System.out.println(this.grille[i][1] + " a gagné !");
 				return true;
 			} else if ((this.grille[0][i] == this.grille[1][i] && this.grille[1][i] == this.grille[2][i])
 					&& this.grille[0][i] != '.') {
+				// System.out.println(this.grille[1][i] + " a gagné !");
 				return true;
 			} else if ((this.grille[0][0] == this.grille[1][1] && this.grille[1][1] == this.grille[2][2])
 					&& this.grille[0][0] != '.') {
+				// System.out.println(this.grille[1][1] + " a gagné !");
+				return true;
+			} else if ((this.grille[2][0] == this.grille[1][1] && this.grille[1][1] == this.grille[0][2])
+					&& this.grille[1][1] != '.') {
+				// System.out.println(this.grille[1][1] + " a gagné !");
+				return true;
+			} else if (this.tableau_plein()) {
+				// System.out.println("Vous avez tous perdus");
 				return true;
 			}
 		}
+
 		return false;
 	}
+
 
 }
